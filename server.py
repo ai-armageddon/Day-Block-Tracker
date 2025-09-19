@@ -1,9 +1,14 @@
 import http.server
 import socketserver
 import os
+from dotenv import load_dotenv
 
-PORT = 3912
-DIRECTORY = "public"
+# Load environment variables
+load_dotenv()
+
+# Use PYTHON_PORT if available, otherwise fall back to PORT
+PORT = int(os.getenv('PYTHON_PORT', os.getenv('PORT', '3912')))
+DIRECTORY = os.getenv('SERVE_DIRECTORY', 'public')
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
