@@ -1,0 +1,19 @@
+{
+  "name": "day-calc-app",
+  "version": "1.0.0",
+  "description": "Barebones React stopwatch app to track waking day blocks",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "cd ui && npm install && npm run build",
+    "pm2": "pm2 start ecosystem.config.js",
+    "dev": "concurrently -n 'backend,frontend' -c 'bgBlue.bold,bgGreen.bold' \"npm run start\" \"cd ui && npm start\" --kill-others-on-fail",
+    "dev:build": "npm run build && npm run start"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

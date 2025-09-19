@@ -1,0 +1,3 @@
+@echo off
+echo Starting Day Block Tracker...
+python3 server.py

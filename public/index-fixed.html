@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day Block Tracker</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      background-color: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .progress-container {
+      width: 100%;
+      height: 30px;
+      background-color: #f0f0f0;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .stats {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+    .stats p {
+      margin: 0.75rem 0;
+      color: #34495e;
+      font-size: 1.1rem;
+    }
+    .stats strong {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background-color: #2980b9;
+    }
+    
+    .btn:active {
+      transform: translateY(1px);
+    }
+    
+    .btn:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background-color: #e74c3c;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #c0392b;
+    }
+
+    /* Stop button */
+    .btn-stop {
+      background-color: #f1c40f;
+      color: #2c3e50;
+    }
+    .btn-stop:hover {
+      background-color: #d4ac0d;
+    }
+    
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    /* Stopwatch styles */
+    .stopwatch {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 1.5rem;
+    }
+    .circle {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 2px solid #3498db;
+      border-radius: 50%;
+    }
+    .dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background: #e74c3c;
+      border-radius: 50%;
+      transform-origin: center;
+      transform: rotate(0deg) translate(0, -70px);
+    }
+    .time {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    /* Log styles */
+    .log {
+      max-width: 600px;
+      margin: 2rem auto 0;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .log h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: #2c3e50;
+    }
+    .log ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .log li {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+      color: #34495e;
+    }
+    .log li:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Day Block Tracker</h1>
+  <div class="stopwatch">
+    <div class="circle">
+      <div class="dot" id="rotDot"></div>
+    </div>
+    <div class="time" id="stopwatchTime">00:00:00</div>
+  </div>
+  <div class="progress-container">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+  <div class="controls">
+    <button id="startButton" class="btn">Start Tracking</button>
+    <button id="stopButton" class="btn btn-stop" disabled>Stop</button>
+    <button id="resetButton" class="btn btn-secondary">Reset</button>
+  </div>
+  
+  <div id="devControls" style="display:none; margin-bottom: 1.5rem;">
+    <div class="controls">
+      <label for="timeScale">Speed:&nbsp;</label>
+      <input type="range" id="timeScale" min="1" max="60" value="1">
+      <span id="timeScaleLabel">1x</span>
+    </div>
+    <div class="controls" style="margin-top: 0.5rem;">
+      <button id="jumpBtn5" class="btn btn-small">+5 min</button>
+      <button id="jumpBtn10" class="btn btn-small">+10 min</button>
+      <button id="jumpBtn60" class="btn btn-small">+1 hour</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <p>Blocks used: <strong><span id="blocksUsed">0</span> / <span id="totalBlocks">100</span></strong></p>
+    <p>Remaining: <strong><span id="remainingBlocks">100</span> blocks</strong></p>
+    <p>Percentage: <strong><span id="percentage">0</span>%</strong></p>
+  </div>
+
+  <div class="log">
+    <h2>Event Log</h2>
+    <ul id="eventLog"></ul>
+  </div>
+
+  <script>
+(() => {
+  const TOTAL_BLOCKS = 100; // 100 blocks of 10 mins each = 1000 mins
+  const BLOCK_DURATION = 10 * 60 * 1000; // 10 minutes
+  const DEV_MODE = location.hash.includes('dev');
+  let timeScale = 1;
+
+  // State variables
+  let blocksUsed = 0;
+  let lastBlockTime = null;
+  let isTracking = false;
+  let sessionStartTime = null;
+  let elapsedBeforePause = 0;
+
+  // Virtual time tracking
+  let virtualNow = Date.now();
+  let lastRealNow = Date.now();
+
+  // DOM elements
+  const progressBar = document.getElementById('progressBar');
+  const blocksUsedEl = document.getElementById('blocksUsed');
+  const remainingBlocksEl = document.getElementById('remainingBlocks');
+  const percentageEl = document.getElementById('percentage');
+  const totalBlocksEl = document.getElementById('totalBlocks');
+
+  const startButton = document.getElementById('startButton');
+  const stopButton = document.getElementById('stopButton');
+  const resetButton = document.getElementById('resetButton');
+
+  const stopwatchTimeEl = document.getElementById('stopwatchTime');
+  const dotEl = document.getElementById('rotDot');
+
+  const logEl = document.getElementById('eventLog');
+  const devControls = document.getElementById('devControls');
+  const timeScaleInput = document.getElementById('timeScale');
+  const timeScaleLabel = document.getElementById('timeScaleLabel');
+
+  // Enable dev mode if #dev in URL
+  if (DEV_MODE) {
+    devControls.style.display = 'block';
+    timeScaleInput.addEventListener('input', () => {
+      timeScale = parseFloat(timeScaleInput.value);
+      timeScaleLabel.textContent = timeScale + 'x';
+    });
+    
+    // Time jump buttons
+    document.getElementById('jumpBtn5').addEventListener('click', () => jumpTime(5));
+    document.getElementById('jumpBtn10').addEventListener('click', () => jumpTime(10));
+    document.getElementById('jumpBtn60').addEventListener('click', () => jumpTime(60));
+  }
+  
+  // Jump time forward by minutes
+  function jumpTime(minutes) {
+    const ms = minutes * 60 * 1000;
+    virtualNow += ms;
+    
+    if (isTracking) {
+      // Process blocks that would have accumulated during the jump
+      const diff = virtualNow - lastBlockTime;
+      if (diff >= BLOCK_DURATION) {
+        const newBlocks = Math.floor(diff / BLOCK_DURATION);
+        blocksUsed = Math.min(blocksUsed + newBlocks, TOTAL_BLOCKS);
+        lastBlockTime += newBlocks * BLOCK_DURATION;
+      }
+    }
+    
+    updateDisplay();
+    addLogEntry(`Jumped +${minutes} minutes`);
+  }
+
+  // Utility functions
+  const pad = (n) => n.toString().padStart(2, '0');
+  
+  function formatTime(ms) {
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    const totalSeconds = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}.${pad(centiseconds)}`;
+  }
+
+  function addLogEntry(type) {
+    const li = document.createElement('li');
+    li.textContent = `${new Date().toLocaleString()} – ${type}`;
+    logEl.prepend(li);
+  }
+
+  function updateDisplay() {
+    const percentage = Math.min((blocksUsed / TOTAL_BLOCKS) * 100, 100);
+    progressBar.style.width = `${percentage}%`;
+    blocksUsedEl.textContent = blocksUsed;
+    remainingBlocksEl.textContent = TOTAL_BLOCKS - blocksUsed;
+    percentageEl.textContent = percentage.toFixed(1);
+    totalBlocksEl.textContent = TOTAL_BLOCKS;
+
+    startButton.disabled = isTracking;
+    stopButton.disabled = !isTracking;
+    startButton.textContent = isTracking ? 'Tracking...' : 'Start Tracking';
+  }
+
+  function updateStopwatchDisplay(elapsed) {
+    stopwatchTimeEl.textContent = formatTime(elapsed);
+    const angle = ((elapsed / 1000) % 10) / 10 * 360; // full rotation every 10s
+    dotEl.style.transform = `rotate(${angle}deg) translate(0, -70px)`;
+  }
+
+  function animationLoop() {
+    const realNow = Date.now();
+    const deltaReal = realNow - lastRealNow;
+    lastRealNow = realNow;
+    virtualNow += deltaReal * timeScale;
+
+    let elapsed = elapsedBeforePause;
+
+    if (isTracking) {
+      elapsed += virtualNow - sessionStartTime;
+
+      // Handle block increments
+      if (lastBlockTime === null) {
+        lastBlockTime = virtualNow;
+      }
+      const diff = virtualNow - lastBlockTime;
+      if (diff >= BLOCK_DURATION) {
+        const newBlocks = Math.floor(diff / BLOCK_DURATION);
+        blocksUsed = Math.min(blocksUsed + newBlocks, TOTAL_BLOCKS);
+        lastBlockTime += newBlocks * BLOCK_DURATION;
+        updateDisplay();
+      }
+    }
+
+    updateStopwatchDisplay(elapsed);
+    requestAnimationFrame(animationLoop);
+  }
+
+  // Control functions
+  function startTracking() {
+    if (isTracking) return;
+    isTracking = true;
+    sessionStartTime = virtualNow;
+    if (lastBlockTime === null) lastBlockTime = sessionStartTime;
+    addLogEntry('Started');
+    updateDisplay();
+  }
+
+  function stopTracking() {
+    if (!isTracking) return;
+    elapsedBeforePause += virtualNow - sessionStartTime;
+    isTracking = false;
+    addLogEntry('Stopped');
+    updateDisplay();
+  }
+
+  function resetTracking() {
+    if (isTracking) {
+      stopTracking();
+    }
+    blocksUsed = 0;
+    lastBlockTime = null;
+    sessionStartTime = null;
+    elapsedBeforePause = 0;
+    addLogEntry('Reset');
+    updateDisplay();
+    updateStopwatchDisplay(0);
+  }
+
+  // Event listeners
+  startButton.addEventListener('click', startTracking);
+  stopButton.addEventListener('click', stopTracking);
+  resetButton.addEventListener('click', resetTracking);
+
+  // Initial state
+  updateDisplay();
+  updateStopwatchDisplay(0);
+  requestAnimationFrame(animationLoop);
+})();
+  </script>
+</body>
+</html>

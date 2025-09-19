@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day Block Tracker</title>
+  <!-- Shadcn UI dependencies -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@radix-ui/colors@latest/gray.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+      --primary: 221.2 83.2% 53.3%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 221.2 83.2% 53.3%;
+      --radius: 0.5rem;
+    }
+
+    .dark {
+      --background: 222.2 84% 4.9%;
+      --foreground: 210 40% 98%;
+      --card: 222.2 84% 4.9%;
+      --card-foreground: 210 40% 98%;
+      --popover: 222.2 84% 4.9%;
+      --popover-foreground: 210 40% 98%;
+      --primary: 217.2 91.2% 59.8%;
+      --primary-foreground: 222.2 47.4% 11.2%;
+      --secondary: 217.2 32.6% 17.5%;
+      --secondary-foreground: 210 40% 98%;
+      --muted: 217.2 32.6% 17.5%;
+      --muted-foreground: 215 20.2% 65.1%;
+      --accent: 217.2 32.6% 17.5%;
+      --accent-foreground: 210 40% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 217.2 32.6% 17.5%;
+      --input: 217.2 32.6% 17.5%;
+      --ring: 224.3 76.3% 48%;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background-color: hsl(var(--card));
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stopwatch {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .circle {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 2px solid hsl(var(--primary));
+      border-radius: 50%;
+    }
+
+    .dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background: hsl(var(--destructive));
+      border-radius: 50%;
+      transform-origin: center;
+      transform: rotate(0deg) translate(0, -70px);
+    }
+
+    .time {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 12px;
+      background-color: hsl(var(--secondary));
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .stats strong {
+      color: hsl(var(--foreground));
+      font-weight: 600;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      height: 2.5rem;
+      padding: 0 1rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: hsl(var(--primary) / 0.9);
+    }
+
+    .btn-primary:disabled {
+      background-color: hsl(var(--primary) / 0.5);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background-color: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+      border: 1px solid hsl(var(--border));
+    }
+
+    .btn-secondary:hover {
+      background-color: hsl(var(--secondary) / 0.8);
+    }
+
+    .btn-destructive {
+      background-color: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+      border: none;
+    }
+
+    .btn-destructive:hover {
+      background-color: hsl(var(--destructive) / 0.9);
+    }
+
+    .btn-small {
+      height: 2rem;
+      padding: 0 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-warning {
+      background-color: hsl(38 92% 50%);
+      color: hsl(0 0% 98%);
+      border: none;
+    }
+
+    .btn-warning:hover {
+      background-color: hsl(38 92% 40%);
+    }
+
+    .btn-warning:disabled {
+      background-color: hsl(38 92% 70%);
+      cursor: not-allowed;
+    }
+
+    .dev-controls {
+      display: none;
+      margin-bottom: 1rem;
+    }
+
+    .dev-controls .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .dev-controls label {
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .dev-controls input[type="range"] {
+      flex: 1;
+      height: 8px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: hsl(var(--secondary));
+      border-radius: 9999px;
+      outline: none;
+    }
+
+    .dev-controls input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: hsl(var(--primary));
+      cursor: pointer;
+    }
+
+    .log-container {
+      margin-top: 2rem;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .log-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .log-list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0.5rem;
+    }
+
+    .log-item {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid hsl(var(--border));
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle">🌙</button>
+  
+  <div class="container">
+    <h1>Day Block Tracker</h1>
+    
+    <div class="card">
+      <div class="stopwatch">
+        <div class="circle">
+          <div class="dot" id="rotDot"></div>
+        </div>
+        <div class="time" id="stopwatchTime">00:00:00.00</div>
+      </div>
+      
+      <div class="progress-container">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      
+      <div class="stats">
+        <div>Blocks: <strong><span id="blocksUsed">0</span>/<span id="totalBlocks">100</span></strong></div>
+        <div>Remaining: <strong><span id="remainingBlocks">100</span></strong></div>
+        <div>Progress: <strong><span id="percentage">0</span>%</strong></div>
+      </div>
+      
+      <div class="button-group">
+        <button id="startButton" class="btn btn-primary">Start Tracking</button>
+        <button id="stopButton" class="btn btn-warning" disabled>Stop</button>
+        <button id="resetButton" class="btn btn-destructive">Reset</button>
+      </div>
+    </div>
+    
+    <div id="devControls" class="dev-controls card">
+      <div class="slider-container">
+        <label for="timeScale">Speed:</label>
+        <input type="range" id="timeScale" min="1" max="60" value="1">
+        <span id="timeScaleLabel">1x</span>
+      </div>
+      <div class="button-group">
+        <button id="jumpBtn5" class="btn btn-secondary btn-small">+5 min</button>
+        <button id="jumpBtn10" class="btn btn-secondary btn-small">+10 min</button>
+        <button id="jumpBtn60" class="btn btn-secondary btn-small">+1 hour</button>
+      </div>
+    </div>
+    
+    <div class="card log-container">
+      <div class="log-header">
+        <span class="log-title">Event Log</span>
+      </div>
+      <ul id="eventLog" class="log-list"></ul>
+    </div>
+  </div>
+
+  <script>
+(() => {
+  const TOTAL_BLOCKS = 100; // 100 blocks of 10 mins each = 1000 mins
+  const BLOCK_DURATION = 10 * 60 * 1000; // 10 minutes
+  const DEV_MODE = location.hash.includes('dev');
+  let timeScale = 1;
+  let darkMode = false;
+
+  // State variables
+  let blocksUsed = 0;
+  let lastBlockTime = null;
+  let isTracking = false;
+  let sessionStartTime = null;
+  let elapsedBeforePause = 0;
+
+  // Virtual time tracking
+  let virtualNow = Date.now();
+  let lastRealNow = Date.now();
+
+  // DOM elements
+  const $ = (id) => document.getElementById(id);
+  
+  const progressBar = $('progressBar');
+  const blocksUsedEl = $('blocksUsed');
+  const remainingBlocksEl = $('remainingBlocks');
+  const percentageEl = $('percentage');
+  const totalBlocksEl = $('totalBlocks');
+
+  const startButton = $('startButton');
+  const stopButton = $('stopButton');
+  const resetButton = $('resetButton');
+
+  const stopwatchTimeEl = $('stopwatchTime');
+  const dotEl = $('rotDot');
+
+  const logEl = $('eventLog');
+  const devControls = $('devControls');
+  const timeScaleInput = $('timeScale');
+  const timeScaleLabel = $('timeScaleLabel');
+  const themeToggle = $('themeToggle');
+
+  // Theme toggle
+  themeToggle.addEventListener('click', () => {
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark', darkMode);
+    themeToggle.textContent = darkMode ? '☀️' : '🌙';
+  });
+
+  // Enable dev mode if #dev in URL
+  if (DEV_MODE) {
+    devControls.style.display = 'block';
+    timeScaleInput.addEventListener('input', () => {
+      timeScale = parseFloat(timeScaleInput.value);
+      timeScaleLabel.textContent = timeScale + 'x';
+    });
+    
+    // Time jump buttons
+    $('jumpBtn5').addEventListener('click', () => jumpTime(5));
+    $('jumpBtn10').addEventListener('click', () => jumpTime(10));
+    $('jumpBtn60').addEventListener('click', () => jumpTime(60));
+  }
+  
+  // Jump time forward by minutes
+  function jumpTime(minutes) {
+    const ms = minutes * 60 * 1000;
+    virtualNow += ms;
+    
+    if (isTracking) {
+      // Process blocks that would have accumulated during the jump
+      const diff = virtualNow - lastBlockTime;
+      if (diff >= BLOCK_DURATION) {
+        const newBlocks = Math.floor(diff / BLOCK_DURATION);
+        blocksUsed = Math.min(blocksUsed + newBlocks, TOTAL_BLOCKS);
+        lastBlockTime += newBlocks * BLOCK_DURATION;
+      }
+    }
+    
+    updateDisplay();
+    addLogEntry(`Jumped +${minutes} minutes`);
+  }
+
+  // Utility functions
+  const pad = (n) => n.toString().padStart(2, '0');
+  
+  function formatTime(ms) {
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    const totalSeconds = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}.${pad(centiseconds)}`;
+  }
+
+  function addLogEntry(type) {
+    const li = document.createElement('li');
+    li.className = 'log-item';
+    li.textContent = `${new Date().toLocaleString()} – ${type}`;
+    logEl.prepend(li);
+  }
+
+  function updateDisplay() {
+    const percentage = Math.min((blocksUsed / TOTAL_BLOCKS) * 100, 100);
+    progressBar.style.width = `${percentage}%`;
+    blocksUsedEl.textContent = blocksUsed;
+    remainingBlocksEl.textContent = TOTAL_BLOCKS - blocksUsed;
+    percentageEl.textContent = percentage.toFixed(1);
+    totalBlocksEl.textContent = TOTAL_BLOCKS;
+
+    startButton.disabled = isTracking;
+    stopButton.disabled = !isTracking;
+    startButton.textContent = isTracking ? 'Tracking...' : 'Start Tracking';
+  }
+
+  function updateStopwatchDisplay(elapsed) {
+    stopwatchTimeEl.textContent = formatTime(elapsed);
+    const angle = ((elapsed / 1000) % 10) / 10 * 360; // full rotation every 10s
+    dotEl.style.transform = `rotate(${angle}deg) translate(0, -70px)`;
+  }
+
+  function animationLoop() {
+    const realNow = Date.now();
+    const deltaReal = realNow - lastRealNow;
+    lastRealNow = realNow;
+    virtualNow += deltaReal * timeScale;
+
+    let elapsed = elapsedBeforePause;
+
+    if (isTracking) {
+      elapsed += virtualNow - sessionStartTime;
+
+      // Handle block increments
+      if (lastBlockTime === null) {
+        lastBlockTime = virtualNow;
+      }
+      const diff = virtualNow - lastBlockTime;
+      if (diff >= BLOCK_DURATION) {
+        const newBlocks = Math.floor(diff / BLOCK_DURATION);
+        blocksUsed = Math.min(blocksUsed + newBlocks, TOTAL_BLOCKS);
+        lastBlockTime += newBlocks * BLOCK_DURATION;
+        updateDisplay();
+      }
+    }
+
+    updateStopwatchDisplay(elapsed);
+    requestAnimationFrame(animationLoop);
+  }
+
+  // Control functions
+  function startTracking() {
+    if (isTracking) return;
+    isTracking = true;
+    sessionStartTime = virtualNow;
+    if (lastBlockTime === null) lastBlockTime = sessionStartTime;
+    addLogEntry('Started');
+    updateDisplay();
+  }
+
+  function stopTracking() {
+    if (!isTracking) return;
+    elapsedBeforePause += virtualNow - sessionStartTime;
+    isTracking = false;
+    addLogEntry('Stopped');
+    updateDisplay();
+  }
+
+  function resetTracking() {
+    if (isTracking) {
+      stopTracking();
+    }
+    blocksUsed = 0;
+    lastBlockTime = null;
+    sessionStartTime = null;
+    elapsedBeforePause = 0;
+    addLogEntry('Reset');
+    updateDisplay();
+    updateStopwatchDisplay(0);
+  }
+
+  // Event listeners
+  startButton.addEventListener('click', startTracking);
+  stopButton.addEventListener('click', stopTracking);
+  resetButton.addEventListener('click', resetTracking);
+
+  // Initial state
+  updateDisplay();
+  updateStopwatchDisplay(0);
+  requestAnimationFrame(animationLoop);
+})();
+  </script>
+</body>
+</html>
