@@ -26,6 +26,8 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  // Server started successfully
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Server running on http://localhost:${PORT}`);
+  }
 });

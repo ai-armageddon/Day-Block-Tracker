@@ -1,4 +1,12 @@
-.git
-
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
+
+# Build output
+ui/build/
+build/
+
+# Features file
+FEATURES.md
